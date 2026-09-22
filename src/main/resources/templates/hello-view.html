@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎页面</title>
+    <!-- Bootstrap5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7f9fc;
+        }
+        .welcome-card {
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+        }
+        .hero-bg {
+            background: linear-gradient(135deg, #4080ff 0%, #2364d2 100%);
+            color: white;
+            border-radius: 14px 14px 0 0;
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand text-primary fw-bold">系统后台</a>
+        <div class="d-flex">
+            <button onclick="goLogout()" class="btn btn-outline-danger">退出登录</button>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card welcome-card">
+                <div class="hero-bg p-5 text-center">
+                    <h2 class="fw-bold">🎉 登录成功，欢迎使用系统</h2>
+                    <p class="mb-0 opacity-75">JWT无状态认证演示项目</p>
+                </div>
+                <div class="card-body p-5">
+                    <h5 class="mb-3">调用受保护接口 /api/hello 返回结果：</h5>
+                    <div id="resultBox" class="alert alert-secondary">
+                        <span class="text-muted">正在请求接口……</span>
+                    </div>
+
+                    <hr class="my-4">
+                    <div>
+                        <h6>功能说明</h6>
+                        <ul class="text-secondary">
+                            <li>Token保存在浏览器localStorage，关闭浏览器再次打开依然保留登录状态</li>
+                            <li>Token有效期24小时，超时需要重新登录</li>
+                            <li>点击退出登录，token进入Redis黑名单，立刻失效</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = async function () {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("未登录，跳转登录页");
+            window.location.href = "/api/login";
+            return;
+        }
+        try {
+            const res = await fetch("/api/hello", {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+            if (!res.ok) {
+                localStorage.removeItem("token");
+                alert("身份凭证失效，请重新登录");
+                window.location.href = "/api/login";
+                return;
+            }
+            const text = await res.text();
+            document.getElementById("resultBox").className = "alert alert-success";
+            document.getElementById("resultBox").innerText = text;
+        } catch (e) {
+            document.getElementById("resultBox").className = "alert alert-danger";
+            document.getElementById("resultBox").innerText = "网络请求异常";
+            console.error(e);
+        }
+    }
+
+    async function goLogout() {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                await fetch("/api/logout", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                })
+            } catch (err) {
+                console.log("登出请求异常", err);
+            }
+        }
+        localStorage.removeItem("token");
+        alert("已退出登录");
+        window.location.href = "/api/login";
+    }
+</script>
+</body>
+</html>

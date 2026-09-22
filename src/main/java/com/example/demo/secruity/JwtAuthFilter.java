@@ -16,13 +16,16 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
-
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final TokenBlackListService tokenBlackListService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JwtAuthFilter(JwtUtil jwtUtil,
+                         UserDetailsService userDetailsService,
+                         TokenBlackListService tokenBlackListService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.tokenBlackListService = tokenBlackListService;
     }
 
     @Override
@@ -30,21 +33,41 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // ========== 新增：放行登录页面、登录接口，跳过JWT校验 ==========
+        String path = request.getRequestURI();
+        // 白名单页面/接口，直接放行，不解析token！
+        if ("/api/login".equals(path)
+                || "/api/doLogin".equals(path)
+                || "/api/hello-view".equals(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String requestUri = request.getRequestURI();
         if ("/api/login".equals(requestUri) || "/api/doLogin".equals(requestUri)) {
             filterChain.doFilter(request, response);
             return;
         }
-        // ==========================================================
 
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+            // 黑名单校验
+            if(tokenBlackListService.isInBlackList(token)){
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=utf-8");
+                response.getWriter().write("{\"code\":401,\"msg\":\"token已失效，请重新登录\"}");
+                return;
+            }
+            try {
+                username = jwtUtil.extractUsername(token);
+            }catch (Exception e){
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=utf-8");
+                response.getWriter().write("{\"code\":401,\"msg\":\"token非法或过期\"}");
+                return;
+            }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -59,4 +82,3 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-

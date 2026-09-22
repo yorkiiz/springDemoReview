@@ -48,5 +48,15 @@ public class JwtUtil {
                 .getPayload();
         return claims.getExpiration().before(new Date());
     }
+
+    // 获取token剩余存活毫秒
+    public long getTokenRemainExpireMs(String token){
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.getExpiration().getTime() - System.currentTimeMillis();
+    }
 }
 

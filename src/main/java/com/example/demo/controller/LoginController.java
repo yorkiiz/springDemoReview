@@ -30,4 +30,12 @@ public class LoginController {
     public String test() {
         return "认证成功，可以访问受保护接口";
     }
+
+
+    @GetMapping("/hello-view")
+    public String helloView(){
+        return "hello-view";
+    }
+
+
 }
