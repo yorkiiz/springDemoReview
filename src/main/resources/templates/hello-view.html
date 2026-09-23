@@ -27,18 +27,17 @@
     <div class="container">
         <a class="navbar-brand text-primary fw-bold">系统后台</a>
         <div class="d-flex">
-            <button onclick="goLogout()" class="btn btn-outline-danger">退出登录</button>
+            <a href="/api/logout" class="btn btn-outline-danger">退出登录</a>
         </div>
     </div>
 </nav>
-
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card welcome-card">
                 <div class="hero-bg p-5 text-center">
                     <h2 class="fw-bold">🎉 登录成功，欢迎使用系统</h2>
-                    <p class="mb-0 opacity-75">JWT无状态认证演示项目</p>
+                    <p class="mb-0 opacity-75">Session‑Cookie认证演示项目</p>
                 </div>
                 <div class="card-body p-5">
                     <h5 class="mb-3">调用受保护接口 /api/hello 返回结果：</h5>
@@ -48,11 +47,18 @@
 
                     <hr class="my-4">
                     <div>
+                        <h5>RabbitMQ测试：发送消息</h5>
+                        <button onclick="callSendApi()" class="btn btn-primary mt-2">调用 /send 发送消息</button>
+                        <div id="sendResult" class="alert alert-secondary mt-3">等待调用接口</div>
+                    </div>
+
+                    <hr class="my-4">
+                    <div>
                         <h6>功能说明</h6>
                         <ul class="text-secondary">
-                            <li>Token保存在浏览器localStorage，关闭浏览器再次打开依然保留登录状态</li>
-                            <li>Token有效期24小时，超时需要重新登录</li>
-                            <li>点击退出登录，token进入Redis黑名单，立刻失效</li>
+                            <li>登录信息保存在服务端Session，浏览器保存JSESSIONID Cookie</li>
+                            <li>登录之后，地址栏直接访问受保护接口，浏览器自动携带Cookie</li>
+                            <li>点击退出登录，服务端销毁会话，Cookie清除</li>
                         </ul>
                     </div>
                 </div>
@@ -63,24 +69,9 @@
 
 <script>
     window.onload = async function () {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            alert("未登录，跳转登录页");
-            window.location.href = "/api/login";
-            return;
-        }
         try {
-            const res = await fetch("/api/hello", {
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            });
-            if (!res.ok) {
-                localStorage.removeItem("token");
-                alert("身份凭证失效，请重新登录");
-                window.location.href = "/api/login";
-                return;
-            }
+            // session模式，fetch自动带上cookie，不需要header Authorization
+            const res = await fetch("/api/hello");
             const text = await res.text();
             document.getElementById("resultBox").className = "alert alert-success";
             document.getElementById("resultBox").innerText = text;
@@ -91,23 +82,20 @@
         }
     }
 
-    async function goLogout() {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                await fetch("/api/logout", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "Bearer " + token
-                    }
-                })
-            } catch (err) {
-                console.log("登出请求异常", err);
-            }
+    // 测试 MQ /send接口
+    async function callSendApi(){
+        const box = document.getElementById("sendResult");
+        box.className = "alert alert-info";
+        box.innerText = "正在调用 /send ...";
+        try{
+            const resp = await fetch("/send");
+            const retText = await resp.text();
+            box.className = "alert alert-success";
+            box.innerText = retText;
+        }catch(err){
+            box.className = "alert alert-danger";
+            box.innerText = "网络异常："+err;
         }
-        localStorage.removeItem("token");
-        alert("已退出登录");
-        window.location.href = "/api/login";
     }
 </script>
 </body>

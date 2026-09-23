@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DemoApplication {
 
 	public static void main(String[] args) {
+		String s = "abc";
+		s.toCharArray();
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
