@@ -54,6 +54,16 @@
 
                     <hr class="my-4">
                     <div>
+                        <h5>订单测试：创建订单</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" id="orderIdInput" class="form-control" placeholder="请输入订单号">
+                            <button onclick="callCreateOrder()" class="btn btn-primary">创建订单</button>
+                        </div>
+                        <div id="orderResult" class="alert alert-secondary">等待调用接口</div>
+                    </div>
+
+                    <hr class="my-4">
+                    <div>
                         <h6>功能说明</h6>
                         <ul class="text-secondary">
                             <li>登录信息保存在服务端Session，浏览器保存JSESSIONID Cookie</li>
@@ -95,6 +105,23 @@
         }catch(err){
             box.className = "alert alert-danger";
             box.innerText = "网络异常："+err;
+        }
+    }
+
+    async function callCreateOrder() {
+        const orderId = document.getElementById("orderIdInput").value.trim();
+        if (!orderId) { alert("请输入订单号"); return; }
+        const box = document.getElementById("orderResult");
+        box.className = "alert alert-info";
+        box.innerText = "正在下单 ...";
+        try {
+            const resp = await fetch("/order/create/" + orderId);
+            const retText = await resp.text();
+            box.className = "alert alert-success";
+            box.innerText = retText;
+        } catch (err) {
+            box.className = "alert alert-danger";
+            box.innerText = "网络异常：" + err;
         }
     }
 </script>
