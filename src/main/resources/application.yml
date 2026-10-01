@@ -20,6 +20,11 @@ spring:
     password: 123456
     virtual-host: /mall
 
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
 logging:
   level:
     org.springframework.security: DEBUG
