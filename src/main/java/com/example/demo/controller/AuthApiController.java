@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.common.Result;
+import com.example.demo.dto.MemberVO;
 import com.example.demo.dto.RegisterDTO;
 import com.example.demo.secruity.JwtUtil;
 import com.example.demo.secruity.TokenBlackListService;
@@ -59,5 +60,13 @@ public class AuthApiController {
         }
         SecurityContextHolder.clearContext();
         return Result.success("登出成功", null);
+    }
+
+    @GetMapping("/user/info")
+    public Result<MemberVO> getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        MemberVO vo = memberService.getUserInfo(username);
+        return Result.success(vo);
     }
 }

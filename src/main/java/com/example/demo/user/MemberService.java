@@ -2,6 +2,7 @@ package com.example.demo.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.demo.common.BusinessException;
+import com.example.demo.dto.MemberVO;
 import com.example.demo.dto.RegisterDTO;
 import com.example.demo.entity.Member;
 import com.example.demo.entity.iml.MemberMapper;
@@ -35,5 +36,23 @@ public class MemberService {
         member.setRole("USER");
         member.setStatus(1);
         memberMapper.insert(member);
+    }
+
+    public MemberVO getUserInfo(String username) {
+        Member member = memberMapper.selectOne(
+                new LambdaQueryWrapper<Member>().eq(Member::getUsername, username)
+        );
+        if (member == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+
+        MemberVO vo = new MemberVO();
+        vo.setId(member.getId());
+        vo.setUsername(member.getUsername());
+        vo.setNickname(member.getNickname());
+        vo.setPhone(member.getPhone());
+        vo.setRole(member.getRole());
+        vo.setCreateTime(member.getCreateTime());
+        return vo;
     }
 }
