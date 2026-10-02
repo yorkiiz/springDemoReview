@@ -13,6 +13,7 @@ public class Member {
     private String password;
     private String nickname;
     private String phone;
+    private String role;
     private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

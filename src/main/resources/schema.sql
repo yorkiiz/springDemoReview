@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `ums_member` (
     `password` VARCHAR(255) NOT NULL COMMENT '密码(BCrypt加密)',
     `nickname` VARCHAR(64) DEFAULT '' COMMENT '昵称',
     `phone` VARCHAR(20) DEFAULT '' COMMENT '手机号',
+    `role` VARCHAR(32) NOT NULL DEFAULT 'USER' COMMENT '角色：USER-普通用户，ADMIN-管理员',
     `status` TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -69,8 +70,8 @@ CREATE TABLE IF NOT EXISTS `oms_pay_record` (
     KEY `idx_trade_no` (`trade_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付流水表';
 
-INSERT IGNORE INTO `ums_member` (`username`, `password`, `nickname`, `status`)
-VALUES ('admin', '$2a$10$hbl6y3FbqMjWmBsSQhodRu6CIoMQ18fyugbkMdU1qyjUaMr5wn/fK', '管理员', 1);
+INSERT IGNORE INTO `ums_member` (`username`, `password`, `nickname`, `role`, `status`)
+VALUES ('admin', '$2a$10$hbl6y3FbqMjWmBsSQhodRu6CIoMQ18fyugbkMdU1qyjUaMr5wn/fK', '管理员', 'ADMIN', 1);
 
 INSERT IGNORE INTO `pms_product` (`name`, `price`, `stock`, `description`, `status`) VALUES
 ('iPhone 16', 5999.00, 100, '苹果手机', 1),

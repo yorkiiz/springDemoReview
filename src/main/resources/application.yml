@@ -25,6 +25,10 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
 
+jwt:
+  secret: mySuperSecretKey1234567890mySuperSecretKey1234567890
+  expiration: 3600000
+
 logging:
   level:
     org.springframework.security: DEBUG

@@ -3,6 +3,8 @@ package com.example.demo.secruity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -10,16 +12,26 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    // 密钥，生产环境放到配置文件，至少256bit
-    private final String SECRET_KEY = "mySuperSecretKey1234567890mySuperSecretKey1234567890";
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration;
+
+    private SecretKey key;
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
     // 生成token
     public String generateToken(String username) {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) //1小时有效期
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
                 .compact();
     }

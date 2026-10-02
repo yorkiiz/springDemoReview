@@ -31,7 +31,7 @@ public class DemoUserDetailService implements UserDetailsService {
         }
         return User.withUsername(member.getUsername())
                 .password(member.getPassword())
-                .roles("ADMIN")
+                .roles(member.getRole())
                 .build();
     }
 }

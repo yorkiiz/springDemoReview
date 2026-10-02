@@ -7,6 +7,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +21,7 @@ public class ProducerController {
     @Autowired
     private AmqpTemplate amqpTemplate;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/send")
     public String sendMsg() {
         String msg = "Hello RabbitMQ，第一条消息";
@@ -29,6 +31,7 @@ public class ProducerController {
     }
 
     // 路径变量 {n}，方法参数接收 Integer n
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/sendn/{n}")
     public String sendnMsg(@PathVariable Integer n) {
         for (int i = 1; i <= n; i++) {
