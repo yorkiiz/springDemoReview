@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.common.Result;
 import com.example.demo.mq.QueueEnum;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -23,27 +24,25 @@ public class ProducerController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/send")
-    public String sendMsg() {
+    public Result<String> sendMsg() {
         String msg = "Hello RabbitMQ，第一条消息";
-        // 参数1：队列名；参数2：消息内容
         rabbitTemplate.convertAndSend("hello_queue", msg);
-        return "消息发送成功：" + msg;
+        return Result.success("消息发送成功：" + msg);
     }
 
-    // 路径变量 {n}，方法参数接收 Integer n
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/sendn/{n}")
-    public String sendnMsg(@PathVariable Integer n) {
+    public Result<String> sendnMsg(@PathVariable Integer n) {
         for (int i = 1; i <= n; i++) {
             String msg = "Hello RabbitMQ，第" + i + "条消息";
             rabbitTemplate.convertAndSend("hello_queue", msg);
         }
-        return "成功发送 " + n + " 条消息";
+        return Result.success("成功发送 " + n + " 条消息");
     }
 
     @GetMapping("/order/create/{orderId}")
-    public String createOrder(@PathVariable Long orderId) {
-        long delayTimes = 50 * 1000; // 测试用10秒，正式改为 30 * 60 * 1000
+    public Result<String> createOrder(@PathVariable Long orderId) {
+        long delayTimes = 50 * 1000;
         amqpTemplate.convertAndSend(
                 QueueEnum.QUEUE_TTL_ORDER_CANCEL.getExchange(),
                 QueueEnum.QUEUE_TTL_ORDER_CANCEL.getRouteKey(),
@@ -55,7 +54,7 @@ public class ProducerController {
                         return message;
                     }
                 });
-        return "下单成功，订单号：" + orderId + "，" + (delayTimes / 1000) + "秒后若未支付将自动取消";
+        return Result.success("下单成功，订单号：" + orderId + "，" + (delayTimes / 1000) + "秒后若未支付将自动取消");
     }
 }
 

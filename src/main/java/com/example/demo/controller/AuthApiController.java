@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-
+import com.example.demo.common.Result;
 import com.example.demo.secruity.JwtUtil;
 import com.example.demo.secruity.TokenBlackListService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,19 +29,20 @@ public class AuthApiController {
 
     // 表单POST提交到这个地址，校验账号密码返回token
     @PostMapping("/doLogin")
-    public String doLogin(@RequestParam String username, @RequestParam String password) {
+    public Result<String> doLogin(@RequestParam String username, @RequestParam String password) {
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        return jwtUtil.generateToken(userDetails.getUsername());
+        String token = jwtUtil.generateToken(userDetails.getUsername());
+        return Result.success("登录成功", token);
     }
 
     /**
      * 登出接口，需要携带token
      */
     @PostMapping("/logout")
-    public String logout(HttpServletRequest request){
+    public Result<String> logout(HttpServletRequest request){
         String authHeader = request.getHeader("Authorization");
         if(authHeader != null && authHeader.startsWith("Bearer ")){
             String token = authHeader.substring(7);
@@ -49,6 +50,6 @@ public class AuthApiController {
             tokenBlackListService.addBlackList(token, remainMs);
         }
         SecurityContextHolder.clearContext();
-        return "登出成功";
+        return Result.success("登出成功", null);
     }
 }
