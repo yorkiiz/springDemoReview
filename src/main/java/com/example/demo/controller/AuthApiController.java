@@ -1,18 +1,18 @@
 package com.example.demo.controller;
 
 import com.example.demo.common.Result;
+import com.example.demo.dto.RegisterDTO;
 import com.example.demo.secruity.JwtUtil;
 import com.example.demo.secruity.TokenBlackListService;
+import com.example.demo.user.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -20,11 +20,19 @@ public class AuthApiController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final TokenBlackListService tokenBlackListService;
+    private final MemberService memberService;
 
-    public AuthApiController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, TokenBlackListService tokenBlackListService) {
+    public AuthApiController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, TokenBlackListService tokenBlackListService, MemberService memberService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.tokenBlackListService = tokenBlackListService;
+        this.memberService = memberService;
+    }
+
+    @PostMapping("/register")
+    public Result<String> register(@Valid @RequestBody RegisterDTO dto) {
+        memberService.register(dto);
+        return Result.success("注册成功", null);
     }
 
     // 表单POST提交到这个地址，校验账号密码返回token

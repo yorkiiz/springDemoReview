@@ -3,7 +3,7 @@ package com.example.demo.common;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,8 +19,8 @@ public class GlobalExceptionHandler {
         return Result.fail(e.getCode(), e.getMessage());
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public Result<?> handleBadCredentials(BadCredentialsException e) {
+    @ExceptionHandler(AuthenticationException.class)
+    public Result<?> handleAuthentication(AuthenticationException e) {
         log.warn("认证失败: {}", e.getMessage());
         return Result.fail(401, "用户名或密码错误");
     }

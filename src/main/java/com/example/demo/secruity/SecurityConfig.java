@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/login",
                                 "/api/doLogin",
+                                "/api/register",
                                 "/api/hello-view"
                         ).permitAll()
                         .anyRequest().authenticated()

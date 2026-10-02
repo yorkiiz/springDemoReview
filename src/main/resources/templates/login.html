@@ -9,24 +9,63 @@
         .form-item{margin-bottom:16px;}
         .form-control{width:100%;box-sizing:border-box;padding:10px 12px;margin-top:8px;border:1px solid #ccc;border-radius:6px;font-size:16px;}
         .submit-btn{width:100%;padding:12px;border:none;border-radius:6px;background:#1677ff;color:white;font-size:17px;cursor:pointer;}
+        .submit-btn:hover{opacity:0.9;}
         .error-msg{color:red;text-align:center;margin-top:10px;display:none;}
+        .success-msg{color:green;text-align:center;margin-top:10px;display:none;}
+        .toggle-link{text-align:center;margin-top:16px;font-size:14px;}
+        .toggle-link a{color:#1677ff;cursor:pointer;text-decoration:none;}
+        .toggle-link a:hover{text-decoration:underline;}
+        .hidden{display:none;}
     </style>
 </head>
 <body>
 <div class="login-box">
     <div class="card">
-        <h2 style="text-align:center;margin-top:0;">系统登录</h2>
+        <h2 id="formTitle" style="text-align:center;margin-top:0;">系统登录</h2>
+
         <form id="loginForm">
             <div class="form-item">
                 <label>账号</label>
-                <input class="form-control" name="username" type="text" value="admin">
+                <input class="form-control" name="username" type="text" placeholder="请输入账号">
             </div>
             <div class="form-item">
                 <label>密码</label>
-                <input class="form-control" name="password" type="password" value="123456">
+                <input class="form-control" name="password" type="password" placeholder="请输入密码">
             </div>
-            <button class="submit-btn" type="submit">提交登录</button>
-            <p class="error-msg" id="errorMsg"></p>
+            <button class="submit-btn" type="submit">登录</button>
+            <p class="error-msg" id="loginError"></p>
+            <div class="toggle-link">
+                还没有账号？<a onclick="switchForm('register')">立即注册</a>
+            </div>
+        </form>
+
+        <form id="registerForm" class="hidden">
+            <div class="form-item">
+                <label>用户名 <span style="color:#999;font-size:12px">（3-20位）</span></label>
+                <input class="form-control" name="username" type="text" placeholder="请输入用户名" required minlength="3" maxlength="20">
+            </div>
+            <div class="form-item">
+                <label>密码 <span style="color:#999;font-size:12px">（6-30位）</span></label>
+                <input class="form-control" name="password" type="password" placeholder="请输入密码" required minlength="6" maxlength="30">
+            </div>
+            <div class="form-item">
+                <label>确认密码</label>
+                <input class="form-control" name="confirmPassword" type="password" placeholder="请再次输入密码" required>
+            </div>
+            <div class="form-item">
+                <label>昵称 <span style="color:#999;font-size:12px">（选填）</span></label>
+                <input class="form-control" name="nickname" type="text" placeholder="请输入昵称">
+            </div>
+            <div class="form-item">
+                <label>手机号 <span style="color:#999;font-size:12px">（选填）</span></label>
+                <input class="form-control" name="phone" type="text" placeholder="请输入手机号">
+            </div>
+            <button class="submit-btn" type="submit">注册</button>
+            <p class="error-msg" id="registerError"></p>
+            <p class="success-msg" id="registerSuccess"></p>
+            <div class="toggle-link">
+                已有账号？<a onclick="switchForm('login')">返回登录</a>
+            </div>
         </form>
     </div>
 </div>
@@ -35,24 +74,101 @@
         window.location.href = '/api/hello-view';
     }
 
+    function switchForm(type) {
+        var loginForm = document.getElementById('loginForm');
+        var registerForm = document.getElementById('registerForm');
+        var title = document.getElementById('formTitle');
+        if (type === 'register') {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            title.innerText = '用户注册';
+        } else {
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            title.innerText = '系统登录';
+        }
+        hideMessages();
+    }
+
+    function hideMessages() {
+        var msgs = document.querySelectorAll('.error-msg, .success-msg');
+        for (var i = 0; i < msgs.length; i++) {
+            msgs[i].style.display = 'none';
+        }
+    }
+
+    function showError(id, msg) {
+        var el = document.getElementById(id);
+        el.innerText = msg;
+        el.style.display = 'block';
+    }
+
+    function showSuccess(id, msg) {
+        var el = document.getElementById(id);
+        el.innerText = msg;
+        el.style.display = 'block';
+    }
+
     document.getElementById('loginForm').addEventListener('submit', function (e) {
         e.preventDefault();
+        hideMessages();
         var formData = new FormData(this);
         fetch('/api/doLogin', {
             method: 'POST',
             body: formData
         })
         .then(function(res) {
-            if (!res.ok) throw new Error('登录失败');
-            return res.text();
+            return res.json().then(function(result) {
+                if (result.code !== 200) throw new Error(result.message || '登录失败');
+                return result;
+            });
         })
-        .then(function(token) {
-            localStorage.setItem('token', token);
+        .then(function(result) {
+            localStorage.setItem('token', result.data);
             window.location.href = '/api/hello-view';
         })
+        .catch(function(err) {
+            showError('loginError', err.message || '账号或密码错误');
+        });
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        hideMessages();
+        var formData = new FormData(this);
+        var password = formData.get('password');
+        var confirmPassword = formData.get('confirmPassword');
+
+        if (password !== confirmPassword) {
+            showError('registerError', '两次输入的密码不一致');
+            return;
+        }
+
+        var body = {
+            username: formData.get('username'),
+            password: password,
+            nickname: formData.get('nickname') || '',
+            phone: formData.get('phone') || ''
+        };
+
+        fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(result) {
+            if (result.code === 200) {
+                showSuccess('registerSuccess', '注册成功，即将跳转到登录页...');
+                setTimeout(function() { switchForm('login'); }, 1500);
+            } else {
+                showError('registerError', result.message || '注册失败');
+            }
+        })
         .catch(function() {
-            document.getElementById('errorMsg').style.display = 'block';
-            document.getElementById('errorMsg').innerText = '账号或密码错误';
+            showError('registerError', '网络异常，请稍后重试');
         });
     });
 </script>
