@@ -27,7 +27,7 @@
     <div class="container">
         <a class="navbar-brand text-primary fw-bold">系统后台</a>
         <div class="d-flex">
-            <a href="/api/logout" class="btn btn-outline-danger">退出登录</a>
+            <a href="javascript:void(0)" onclick="doLogout()" class="btn btn-outline-danger">退出登录</a>
         </div>
     </div>
 </nav>
@@ -37,7 +37,7 @@
             <div class="card welcome-card">
                 <div class="hero-bg p-5 text-center">
                     <h2 class="fw-bold">🎉 登录成功，欢迎使用系统</h2>
-                    <p class="mb-0 opacity-75">Session‑Cookie认证演示项目</p>
+                    <p class="mb-0 opacity-75">JWT 无状态认证演示项目</p>
                 </div>
                 <div class="card-body p-5">
                     <h5 class="mb-3">调用受保护接口 /api/hello 返回结果：</h5>
@@ -66,9 +66,9 @@
                     <div>
                         <h6>功能说明</h6>
                         <ul class="text-secondary">
-                            <li>登录信息保存在服务端Session，浏览器保存JSESSIONID Cookie</li>
-                            <li>登录之后，地址栏直接访问受保护接口，浏览器自动携带Cookie</li>
-                            <li>点击退出登录，服务端销毁会话，Cookie清除</li>
+                            <li>登录信息以 JWT Token 保存在浏览器 localStorage，关闭浏览器不会丢失</li>
+                            <li>每次请求通过 JS 在 Header 中携带 Authorization: Bearer token</li>
+                            <li>点击退出登录，服务端将 Token 加入黑名单，前端清除 localStorage</li>
                         </ul>
                     </div>
                 </div>
@@ -78,11 +78,30 @@
 </div>
 
 <script>
+    var token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/api/login';
+    }
+
+    function authHeaders() {
+        return { 'Authorization': 'Bearer ' + localStorage.getItem('token') };
+    }
+
+    async function authFetch(url) {
+        var res = await fetch(url, { headers: authHeaders() });
+        if (res.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/api/login';
+            return null;
+        }
+        return res;
+    }
+
     window.onload = async function () {
         try {
-            // session模式，fetch自动带上cookie，不需要header Authorization
-            const res = await fetch("/api/hello");
-            const text = await res.text();
+            var res = await authFetch("/api/hello");
+            if (!res) return;
+            var text = await res.text();
             document.getElementById("resultBox").className = "alert alert-success";
             document.getElementById("resultBox").innerText = text;
         } catch (e) {
@@ -92,14 +111,14 @@
         }
     }
 
-    // 测试 MQ /send接口
     async function callSendApi(){
-        const box = document.getElementById("sendResult");
+        var box = document.getElementById("sendResult");
         box.className = "alert alert-info";
         box.innerText = "正在调用 /send ...";
         try{
-            const resp = await fetch("/send");
-            const retText = await resp.text();
+            var resp = await authFetch("/send");
+            if (!resp) return;
+            var retText = await resp.text();
             box.className = "alert alert-success";
             box.innerText = retText;
         }catch(err){
@@ -109,20 +128,29 @@
     }
 
     async function callCreateOrder() {
-        const orderId = document.getElementById("orderIdInput").value.trim();
+        var orderId = document.getElementById("orderIdInput").value.trim();
         if (!orderId) { alert("请输入订单号"); return; }
-        const box = document.getElementById("orderResult");
+        var box = document.getElementById("orderResult");
         box.className = "alert alert-info";
         box.innerText = "正在下单 ...";
         try {
-            const resp = await fetch("/order/create/" + orderId);
-            const retText = await resp.text();
+            var resp = await authFetch("/order/create/" + orderId);
+            if (!resp) return;
+            var retText = await resp.text();
             box.className = "alert alert-success";
             box.innerText = retText;
         } catch (err) {
             box.className = "alert alert-danger";
             box.innerText = "网络异常：" + err;
         }
+    }
+
+    async function doLogout() {
+        try {
+            await fetch("/api/logout", { method: "POST", headers: authHeaders() });
+        } catch (e) { console.error(e); }
+        localStorage.removeItem('token');
+        window.location.href = '/api/login';
     }
 </script>
 </body>

@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `oms_pay_record` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付流水表';
 
 INSERT IGNORE INTO `ums_member` (`username`, `password`, `nickname`, `status`)
-VALUES ('admin', '$2a$10$EixZaYVK1fsbw1ZfrX3O5eFYOaE5kLeGFqgNFCLBzBjyOvFzqmbqC', '管理员', 1);
+VALUES ('admin', '$2a$10$hbl6y3FbqMjWmBsSQhodRu6CIoMQ18fyugbkMdU1qyjUaMr5wn/fK', '管理员', 1);
 
 INSERT IGNORE INTO `pms_product` (`name`, `price`, `stock`, `description`, `status`) VALUES
 ('iPhone 16', 5999.00, 100, '苹果手机', 1),

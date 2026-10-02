@@ -34,16 +34,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        // 白名单页面/接口，直接放行，不解析token！
         if ("/api/login".equals(path)
                 || "/api/doLogin".equals(path)
                 || "/api/hello-view".equals(path)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String requestUri = request.getRequestURI();
-        if ("/api/login".equals(requestUri) || "/api/doLogin".equals(requestUri)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -53,7 +46,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String username = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            // 黑名单校验
             if(tokenBlackListService.isInBlackList(token)){
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json;charset=utf-8");
