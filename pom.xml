@@ -115,6 +115,13 @@
             <version>3.5.17</version>
         </dependency>
 
+        <!-- MyBatis-Plus 分页插件依赖（3.5.9+ 需要单独引入） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+            <version>3.5.17</version>
+        </dependency>
+
     </dependencies>
 
 	<build>
