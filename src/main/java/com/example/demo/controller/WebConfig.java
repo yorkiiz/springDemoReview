@@ -8,12 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    private final DemoInterceptor demoInterceptor;
-
-    public WebConfig(DemoInterceptor demoInterceptor) {
-        this.demoInterceptor = demoInterceptor;
-    }
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

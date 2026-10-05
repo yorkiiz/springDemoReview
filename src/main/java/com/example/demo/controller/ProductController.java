@@ -1,16 +1,20 @@
 package com.example.demo.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.Result;
 import com.example.demo.entity.Product;
 import com.example.demo.entity.iml.ProductMapper;
 import com.example.demo.user.ProductService;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/product")
@@ -27,9 +31,34 @@ public class ProductController {
     @GetMapping("/list")
     public Result<Page<Product>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice) {
+        
         Page<Product> page = new Page<>(pageNum, pageSize);
-        Page<Product> result = productMapper.selectPage(page, null);
+        
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
+        
+        if (StringUtils.hasText(keyword)) {
+            queryWrapper.and(wrapper -> 
+                wrapper.like("name", keyword)
+                       .or()
+                       .like("description", keyword)
+            );
+        }
+        
+        if (minPrice != null) {
+            queryWrapper.ge("price", minPrice);
+        }
+        
+        if (maxPrice != null) {
+            queryWrapper.le("price", maxPrice);
+        }
+        
+        queryWrapper.orderByDesc("create_time");
+        
+        Page<Product> result = productMapper.selectPage(page, queryWrapper);
         return Result.success(result);
     }
 
