@@ -33,8 +33,8 @@ public class ProductController {
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice) {
+            @RequestParam(defaultValue = "0") BigDecimal minPrice,
+            @RequestParam(defaultValue = "0") BigDecimal maxPrice) {
         
         Page<Product> page = new Page<>(pageNum, pageSize);
         
@@ -48,11 +48,11 @@ public class ProductController {
             );
         }
         
-        if (minPrice != null) {
+        if (minPrice.compareTo(BigDecimal.ZERO) > 0) {
             queryWrapper.ge("price", minPrice);
         }
         
-        if (maxPrice != null) {
+        if (maxPrice.compareTo(BigDecimal.ZERO) > 0) {
             queryWrapper.le("price", maxPrice);
         }
         
