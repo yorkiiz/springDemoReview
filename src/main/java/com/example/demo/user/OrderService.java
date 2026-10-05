@@ -1,6 +1,7 @@
 package com.example.demo.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.demo.dto.OrderDetailVO;
 import com.example.demo.entity.Order;
 import com.example.demo.entity.OrderItem;
 import com.example.demo.entity.Product;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -107,6 +109,43 @@ public class OrderService {
 
     public Order getOrderDetail(Long orderId) {
         return orderMapper.selectById(orderId);
+    }
+
+    public OrderDetailVO getOrderDetailVO(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            return null;
+        }
+
+        OrderDetailVO vo = new OrderDetailVO();
+        vo.setId(order.getId());
+        vo.setOrderSn(order.getOrderSn());
+        vo.setMemberId(order.getMemberId());
+        vo.setTotalAmount(order.getTotalAmount());
+        vo.setPayAmount(order.getPayAmount());
+        vo.setPayType(order.getPayType());
+        vo.setStatus(order.getStatus());
+        vo.setPayTime(order.getPayTime());
+        vo.setCancelTime(order.getCancelTime());
+        vo.setCreateTime(order.getCreateTime());
+        vo.setUpdateTime(order.getUpdateTime());
+
+        List<OrderItem> orderItems = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
+        
+        List<OrderDetailVO.OrderItemVO> itemVOS = orderItems.stream().map(item -> {
+            OrderDetailVO.OrderItemVO itemVO = new OrderDetailVO.OrderItemVO();
+            itemVO.setId(item.getId());
+            itemVO.setProductId(item.getProductId());
+            itemVO.setProductName(item.getProductName());
+            itemVO.setProductPrice(item.getProductPrice());
+            itemVO.setQuantity(item.getQuantity());
+            itemVO.setSubtotal(item.getProductPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            return itemVO;
+        }).collect(Collectors.toList());
+        
+        vo.setItems(itemVOS);
+        return vo;
     }
 
     private String generateOrderSn() {
