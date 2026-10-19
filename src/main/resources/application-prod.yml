@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: mall-backend
+
+  datasource:
+    # 地址全部改成 k8s 服务名，通过环境变量注入，代码里不出现明文密码
+    url: jdbc:mysql://${MYSQL_HOST:mysql-svc}:${MYSQL_PORT:3306}/${MYSQL_DB:mall_demo}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  # ⚠️ 必须关掉：原配置 mode: always 会在每次启动执行 schema.sql，
+  # 两个副本同时启动会互相抢着建表，且库里已有数据时可能报错
+  sql:
+    init:
+      mode: never
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis-svc}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:123456}
+      database: 0
+      timeout: 3000ms
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq-svc}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:mall}
+    password: ${RABBITMQ_PASSWORD:123456}
+    virtual-host: ${RABBITMQ_VHOST:/mall}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+
+mybatis-plus:
+  configuration:
+    # 生产不要打完整 SQL 到控制台，改成 slf4j 走日志框架
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: ${JWT_SECRET:mySuperSecretKey1234567890mySuperSecretKey1234567890}
+  expiration: 3600000
+
+logging:
+  level:
+    root: INFO
+    # DEBUG 会打印 Security 过滤链和部分令牌信息，生产不要开
+    org.springframework.security: INFO
