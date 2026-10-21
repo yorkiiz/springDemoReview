@@ -13,6 +13,8 @@ on:
 env:
   # ACR 仓库地址（个人版，命名空间 yorkiiz）。region 若不是杭州，改这里
   IMAGE: registry.cn-hangzhou.aliyuncs.com/yorkiiz/demo
+  # 集群内拉取走 VPC 内网（slave1 无公网出口，走公网会 i/o timeout）
+  IMAGE_VPC: registry-vpc.cn-hangzhou.aliyuncs.com/yorkiiz/demo
 
 jobs:
   build-and-push:
@@ -47,5 +49,5 @@ jobs:
           username: root
           key: ${{ secrets.MASTER_SSH_KEY }}
           script: |
-            kubectl set image deployment/myapp-backend backend=${{ env.IMAGE }}:${{ github.sha }}
+            kubectl set image deployment/myapp-backend backend=${{ env.IMAGE_VPC }}:${{ github.sha }}
             kubectl rollout status deployment/myapp-backend --timeout=180s
