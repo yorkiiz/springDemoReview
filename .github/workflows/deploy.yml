@@ -1,0 +1,51 @@
+name: build-and-deploy
+
+# push 到 main 时自动构建、推镜像、滚动更新集群
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {}
+
+env:
+  # ACR 仓库地址（个人版，命名空间 yorkiiz）。region 若不是杭州，改这里
+  IMAGE: registry.cn-hangzhou.aliyuncs.com/yorkiiz/demo
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      - name: Build and push image via Jib
+        # jib:build 会自动先执行 package；proc=full 是 JDK23+ 下 Lombok 必需
+        run: >
+          mvn -B jib:build -DskipTests -Dmaven.compiler.proc=full
+          -Djib.to.image=${{ env.IMAGE }}:${{ github.sha }}
+          -Djib.to.tags=latest
+          -Djib.to.auth.username=${{ secrets.ACR_USERNAME }}
+          -Djib.to.auth.password=${{ secrets.ACR_PASSWORD }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rolling update on k8s master
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.MASTER_HOST }}
+          username: root
+          key: ${{ secrets.MASTER_SSH_KEY }}
+          script: |
+            kubectl set image deployment/myapp-backend backend=${{ env.IMAGE }}:${{ github.sha }}
+            kubectl rollout status deployment/myapp-backend --timeout=180s
