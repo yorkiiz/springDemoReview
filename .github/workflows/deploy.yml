@@ -30,7 +30,7 @@ jobs:
       - name: Build and push image via Jib
         # jib:build 会自动先执行 package；proc=full 是 JDK23+ 下 Lombok 必需
         run: >
-          mvn -B jib:build -DskipTests -Dmaven.compiler.proc=full
+          mvn -B clean package jib:build -DskipTests -Dmaven.compiler.proc=full
           -Djib.to.image=${{ env.IMAGE }}:${{ github.sha }}
           -Djib.to.tags=latest
           -Djib.to.auth.username=${{ secrets.ACR_USERNAME }}
