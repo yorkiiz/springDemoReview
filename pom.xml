@@ -130,6 +130,25 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<!-- 无需 Docker daemon 的镜像构建插件：jib:build 直推镜像仓库 -->
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.4.6</version>
+				<configuration>
+					<from>
+						<image>eclipse-temurin:26-jre-alpine</image>
+					</from>
+					<to>
+						<image>registry.cn-hangzhou.aliyuncs.com/yorkiiz/demo</image>
+					</to>
+					<container>
+						<ports>
+							<port>8080</port>
+						</ports>
+					</container>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<repositories>
